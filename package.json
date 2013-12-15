@@ -1,0 +1,35 @@
+{
+  "name": "s3tools",
+  "description": "Tools for managing your S3 buckets and objects.",
+  "version": "0.1.0",
+  "bin": {
+    "s3-upload": "./bin/s3-upload"
+  },
+  "homepage": "https://github.com/chilts/s3tools",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/chilts/s3tools.git"
+  },
+  "bugs": {
+    "url": "http://github.com/chilts/s3tools/issues"
+  },
+  "dependencies": {
+    "aws-sdk": "~2.0.0-rc3",
+    "argh": "~0.1.1"
+  },
+  "author": {
+    "name": "Andrew Chilton",
+    "email": "andychilton@gmail.com",
+    "url": "http://www.chilts.org/"
+  },
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "http://chilts.mit-license.org/2013/"
+    }
+  ],
+  "keywords": [
+    "aws",
+    "s3"
+  ]
+}

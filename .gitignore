@@ -1,0 +1,4 @@
+node_modules/
+set-env.sh
+*.log
+*~

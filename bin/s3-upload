@@ -1,0 +1,63 @@
+#!/usr/bin/env node
+// ----------------------------------------------------- -*- javascript -*- ---
+
+// core
+var fs = require('fs');
+
+// npm
+var argh = require('argh');
+var aws = require('aws-sdk');
+var async = require('async');
+
+// ----------------------------------------------------------------------------
+
+// set up the AWS config and credentials
+aws.config.update({
+    accessKeyId     : process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey : process.env.AWS_SECRET_ACCESS_KEY,
+    sslEnabled      : true,
+    logger          : process.stdout,
+});
+
+var args     = argh.argv;
+var acl      = args.acl;
+var bucket   = args.argv[0];
+var filename = args.argv[1];
+var key      = args.argv[2];
+
+if ( !bucket ) {
+    console.log('Usage: %s %s <bucket> [--acl <acl>] filename key', process.argv[0], process.argv[1]);
+    process.exit(2);
+}
+
+if ( !filename ) {
+    console.log('Usage: %s %s <bucket> [--acl <acl>]  filename key', process.argv[0], process.argv[1]);
+    process.exit(2);
+}
+
+if ( !key ) {
+    console.log('Usage: %s %s <bucket> [--acl <acl>]  filename key', process.argv[0], process.argv[1]);
+    process.exit(2);
+}
+
+var s3 = new aws.S3({ params : { Bucket : bucket }});
+
+console.log('Uploading ' + filename + ' to ' + bucket + ':' + key);
+console.log('Uploading ' + filename);
+console.log( ' -> ' + bucket + '/' + key);
+var params = {
+    Key  : key,
+    Body : fs.createReadStream(filename),
+};
+
+if ( args.acl ) {
+    params.ACL = args.acl;
+}
+
+s3.putObject(params, function(err, info) {
+    if (err) throw err;
+    console.log('info:', info);
+    console.log("Object is public at https://s3.amazonaws.com/" + params.Bucket + "/" + params.Key);
+});
+
+// ----------------------------------------------------------------------------
