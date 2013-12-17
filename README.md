@@ -66,8 +66,10 @@ If the bucket does not exist, the command returns a non-zero exit code.
 Uploads one file at a time and puts it into a bucket with the given prefix:
 
 ```
-Usage: s3-upload <bucket> <filename> <key>
+Usage: s3-upload <bucket> <filename> [<key>]
 ```
+
+If key is not specified, then the key defaults to the filename.
 
 Options:
 
@@ -77,6 +79,7 @@ Examples:
 
 ```
 $ s3-upload my-bucket my-file.txt file.txt
+$ s3-upload my-bucket filename-and-key.txt
 $ s3-upload f.example.com --acl public-read path/to/animation.avi videos/animation.avi
 ```
 
