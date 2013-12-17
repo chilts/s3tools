@@ -2,6 +2,34 @@
 
 Tools for managing your S3 buckets and objects.
 
+## Environment Variables ##
+
+Similar to the official tools, you should export the following into your environment:
+
+```
+export AWS_ACCESS_KEY_ID=...
+export AWS_SECRET_ACCESS_KEY=...
+```
+
+### s3-list-buckets ###
+
+```
+Usage: s3-list-buckets
+```
+
+Prints each objects out as follows:
+
+```
+CreationDate Name
+
+e.g.
+2008-01-06T10:04:16.000Z bulk
+```
+
+Options:
+
+* none
+
 ### s3-list-objects ###
 
 ```

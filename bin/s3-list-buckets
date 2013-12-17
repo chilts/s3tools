@@ -1,0 +1,40 @@
+#!/usr/bin/env node
+// ----------------------------------------------------- -*- javascript -*- ---
+
+// npm
+var aws = require('aws-sdk');
+var async = require('async');
+
+// ----------------------------------------------------------------------------
+
+// set up the AWS config and credentials
+aws.config.update({
+    accessKeyId     : process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey : process.env.AWS_SECRET_ACCESS_KEY,
+});
+
+// get a client to S3 and start the listing off
+var s3 = new aws.S3();
+listBuckets();
+
+// ----------------------------------------------------------------------------
+
+function listBuckets() {
+    // http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#listBuckets-property
+    s3.listBuckets(function (err, data) {
+        if (err) {
+            if ( err.retryable ) {
+                return listBuckets();
+            }
+            // this error cannot be re-tried
+            console.warn(err.code + ' ' + err.message);
+            process.exit(2);
+        }
+
+        data.Buckets.forEach(function(bucket) {
+            console.log(bucket.CreationDate.toISOString() + ' ' + bucket.Name);
+        });
+    });
+}
+
+// ----------------------------------------------------------------------------
