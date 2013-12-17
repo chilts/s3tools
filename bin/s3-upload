@@ -42,7 +42,6 @@ if ( !key ) {
 
 var s3 = new aws.S3({ params : { Bucket : bucket }});
 
-console.log('Uploading ' + filename + ' to ' + bucket + ':' + key);
 console.log('Uploading ' + filename);
 console.log( ' -> ' + bucket + '/' + key);
 var params = {
@@ -57,7 +56,9 @@ if ( args.acl ) {
 s3.putObject(params, function(err, info) {
     if (err) throw err;
     console.log('info:', info);
-    console.log("Object is public at https://s3.amazonaws.com/" + params.Bucket + "/" + params.Key);
+    console.log('RequestId: ' + info.RequestId);
+    console.log('ETag: ' + info.ETag.substr(1, 32));
+    console.log("Object is public at https://s3.amazonaws.com/" + bucket + "/" + params.Key);
 });
 
 // ----------------------------------------------------------------------------

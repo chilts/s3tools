@@ -1,0 +1,54 @@
+#!/usr/bin/env node
+// ----------------------------------------------------- -*- javascript -*- ---
+
+// npm
+var aws = require('aws-sdk');
+var async = require('async');
+
+// ----------------------------------------------------------------------------
+
+// set up the AWS config and credentials
+aws.config.update({
+    accessKeyId     : process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey : process.env.AWS_SECRET_ACCESS_KEY,
+});
+
+var bucket = process.argv[2];
+if (!bucket) {
+    console.log('Usage: %s %s <bucket>', process.argv[0], process.argv[1]);
+    process.exit(2);
+}
+
+// get a client to S3 and start the listing off
+var s3 = new aws.S3({ params : { Bucket : bucket }});
+listObjects();
+
+// ----------------------------------------------------------------------------
+
+function listObjects(marker) {
+    var params = {};
+    if (marker) {
+        params.Marker = marker;
+    }
+
+    // http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#listObjects-property
+    s3.listObjects(params, function (err, data) {
+        if (err) {
+            if ( err.retryable ) {
+                return listObjects(marker);
+            }
+            // this error cannot be re-tried
+            console.warn(err.code + ' ' + err.message);
+            process.exit(2);
+        }
+
+        data.Contents.forEach(function(obj) {
+            console.log(obj.ETag.substr(1, 32) + ' ' + obj.Key + ' (' + obj.Size + ')');
+        });
+        if ( data.IsTruncated ) {
+            listObjects(data.Contents[data.Contents.length-1].Key);
+        }
+    });
+}
+
+// ----------------------------------------------------------------------------
