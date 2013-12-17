@@ -3,7 +3,8 @@
   "description": "Tools for managing your S3 buckets and objects.",
   "version": "0.2.0",
   "bin": {
-    "s3-upload": "./bin/s3-upload"
+    "s3-upload": "./bin/s3-upload",
+    "s3-list-objects": "./bin/s3-list-objects"
   },
   "homepage": "https://github.com/chilts/s3tools",
   "repository": {
