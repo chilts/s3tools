@@ -23,7 +23,7 @@ var args     = argh.argv;
 var acl      = args.acl;
 var bucket   = args.argv[0];
 var filename = args.argv[1];
-var key      = args.argv[2];
+var key      = args.argv[2] || args.argv[1];
 
 if ( !bucket ) {
     console.log('Usage: %s %s <bucket> [--acl <acl>] filename key', process.argv[0], process.argv[1]);
