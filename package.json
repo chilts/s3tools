@@ -1,7 +1,7 @@
 {
   "name": "s3tools",
   "description": "Tools for managing your S3 buckets and objects.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "bin": {
     "s3-upload": "./bin/s3-upload"
   },
