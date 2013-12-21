@@ -1,7 +1,7 @@
 {
   "name": "s3tools",
   "description": "Tools for managing your S3 buckets and objects.",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "bin": {
     "s3-list-buckets": "./bin/s3-list-buckets",
     "s3-list-objects": "./bin/s3-list-objects",
