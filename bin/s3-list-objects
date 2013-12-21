@@ -5,6 +5,9 @@
 var aws = require('aws-sdk');
 var async = require('async');
 
+// local
+var nice = require('../lib/nice-s3.js');
+
 // ----------------------------------------------------------------------------
 
 // set up the AWS config and credentials
@@ -20,35 +23,16 @@ if (!bucket) {
 }
 
 // get a client to S3 and start the listing off
-var s3 = new aws.S3({ params : { Bucket : bucket }});
-listObjects();
+var s3 = new aws.S3();
 
-// ----------------------------------------------------------------------------
-
-function listObjects(marker) {
-    var params = {};
-    if (marker) {
-        params.Marker = marker;
+nice.objects(s3, bucket, function(err, objects) {
+    if (err) {
+        console.warn(err.code + ' - ' + err.message);
+        process.exit(2);
     }
-
-    // http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#listObjects-property
-    s3.listObjects(params, function (err, data) {
-        if (err) {
-            if ( err.retryable ) {
-                return listObjects(marker);
-            }
-            // this error cannot be re-tried
-            console.warn(err.code + ' ' + err.message);
-            process.exit(2);
-        }
-
-        data.Contents.forEach(function(obj) {
-            console.log(obj.ETag.substr(1, 32) + ' ' + obj.Key + ' (' + obj.Size + ')');
-        });
-        if ( data.IsTruncated ) {
-            listObjects(data.Contents[data.Contents.length-1].Key);
-        }
+    objects.forEach(function(obj) {
+        console.log(obj.ETag.substr(1, 32) + ' ' + obj.Key + ' (' + obj.Size + ')');
     });
-}
+});
 
 // ----------------------------------------------------------------------------
