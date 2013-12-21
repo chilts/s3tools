@@ -83,6 +83,27 @@ $ s3-upload my-bucket filename-and-key.txt
 $ s3-upload f.example.com --acl public-read path/to/animation.avi videos/animation.avi
 ```
 
+### s3-find-duplicates ###
+
+Finds all duplicate objects in the bucket based on the ETag/MD5.
+
+```
+Usage: s3-find-duplicates <bucket>
+```
+
+Prints each ETag first, then the names of any duplicate objects:
+
+```
+dc603ae9ef991f230c00671fde9958a8
+  my-file-1.txt
+  my-file-2.txt
+f18a0da9e043cc4f8579acb7cc838357
+  photos/2013-holiday/20130319_165630.jpg
+  photos/2013-holiday/DSCN2274.JPG
+```
+
+As you can see the two `my-file-{1,2}.txt` are the same file and the two holiday images are also the same.
+
 ## Author ##
 
 Written by [Andrew Chilton](http://chilts.org/) - [Blog](http://chilts.org/blog/) -

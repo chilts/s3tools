@@ -1,0 +1,66 @@
+#!/usr/bin/env node
+// ----------------------------------------------------- -*- javascript -*- ---
+
+// npm
+var aws = require('aws-sdk');
+var async = require('async');
+
+// local
+var nice = require('../lib/nice-s3.js');
+
+// ----------------------------------------------------------------------------
+
+// set up the AWS config and credentials
+aws.config.update({
+    accessKeyId     : process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey : process.env.AWS_SECRET_ACCESS_KEY,
+});
+
+var bucket = process.argv[2];
+if (!bucket) {
+    console.log('Usage: %s %s <bucket>', process.argv[0], process.argv[1]);
+    process.exit(2);
+}
+
+// get a client to S3 and start the listing off
+var s3 = new aws.S3();
+
+nice.objects(s3, bucket, function(err, objects) {
+    if (err) {
+        console.warn(err.code + ' - ' + err.message);
+        process.exit(2);
+    }
+
+
+    // go through all the objects
+    var md5 = {};
+    objects.forEach(function(obj) {
+        var etag = obj.ETag.substr(1, 32);
+        if ( md5[etag] ) {
+            // subsequent ones
+            md5[etag].push(obj);
+        }
+        else {
+            // first one
+            md5[etag] = [ obj ];
+        }
+    });
+
+    // find all the duplicates
+    var dup = {};
+    Object.keys(md5).forEach(function(etag) {
+        if ( md5[etag].length > 1 ) {
+            dup[etag] = md5[etag];
+        }
+    });
+
+    // now print them out nicely
+    Object.keys(dup).sort().forEach(function(etag) {
+        console.log(etag);
+        dup[etag].forEach(function(obj) {
+            console.log('  ' + obj.Key);
+        });
+    });
+});
+
+// ----------------------------------------------------------------------------
