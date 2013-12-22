@@ -135,6 +135,21 @@ $ s3-sync files files
 $ s3-sync s3.example.com public
 ```
 
+Example output. You can see a subdir/ being created, a cnflict on filesize, a conflict on MD5, an object being
+downloaded, a file being uploaded and a file which is the same in both places:
+
+```
++ subdir/ (created)
+✗ different-size.txt (different sizes)
+✗ different-md5.txt (different MD5s)
+↓ new-object.txt
+↑ new-file.js
+✓ file-ok.txt
+```
+
+There are various other errors (such as inability to create a subdirectory) and each is preceded with `✗` and followed
+by the error message.
+
 ## Author ##
 
 Written by [Andrew Chilton](http://chilts.org/) - [Blog](http://chilts.org/blog/) -

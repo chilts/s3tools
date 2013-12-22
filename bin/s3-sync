@@ -189,7 +189,7 @@ function mkdir(item, done) {
         }
 
         if ( !stats.isDirectory() ) {
-            console.log('✗ ' + dirname + " (is not a directory)");
+            console.log('✗ ' + newDir + " (already exists; not a directory)");
             dirCache[newDir] = false;
             return done();
         }
