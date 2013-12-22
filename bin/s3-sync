@@ -1,0 +1,236 @@
+#!/usr/bin/env node
+// ----------------------------------------------------- -*- javascript -*- ---
+
+// core
+var fs = require('fs');
+var crypto = require('crypto');
+
+// npm
+var aws = require('aws-sdk');
+var async = require('async');
+var mkdirp = require('mkdirp');
+var walk = require('walkdir');
+
+// local
+var nice = require('../lib/nice-s3.js');
+
+// ----------------------------------------------------------------------------
+
+// set up the AWS config and credentials
+aws.config.update({
+    accessKeyId     : process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey : process.env.AWS_SECRET_ACCESS_KEY,
+});
+
+var bucket = process.argv[2];
+if (!bucket) {
+    console.log('Usage: %s %s <bucket> <dir>', process.argv[0], process.argv[1]);
+    process.exit(2);
+}
+
+var dir = process.argv[3];
+if (!dir) {
+    console.log('Usage: %s %s <bucket> <dir>', process.argv[0], process.argv[1]);
+    process.exit(2);
+}
+var fullDir = fs.realpathSync(dir);
+
+var objects = {}, objectsRead;
+var files = {}, filesRead;
+
+// get a client to S3 and start the listing off
+var s3 = new aws.S3();
+
+nice.objects(s3, bucket, function(err, objs) {
+    if (err) {
+        console.warn(err.code + ' - ' + err.message);
+        process.exit(2);
+    }
+
+    objs.forEach(function(obj) {
+        objects[obj.Key] = {
+            key  : obj.Key,
+            md5  : obj.ETag.substr(1, 32),
+            size : obj.Size,
+        };
+    });
+
+    objectsRead = true;
+    if ( filesRead ) {
+        compare(objects, files);
+    }
+});
+
+// also, start the scanning of all the local files
+var emitter = walk(dir);
+emitter.on('file', function(filename, stat) {
+    var relativeFile = filename.substr(fullDir.length + 1);
+
+    // ignore backup files
+    if ( relativeFile.match(/~$/) ) {
+        // fmt.field('IgnoringBackup', relativeFile);
+        return;
+    }
+
+    // ignore .dotfiles files
+    if ( relativeFile.match(/^\./) ) {
+        // fmt.field('IgnorningDotFile', relativeFile);
+        return;
+    }
+
+    // push onto files
+    files[relativeFile] = {
+        filename : relativeFile,
+        size     : stat.size,
+    };
+});
+
+emitter.on('end', function() {
+    // console.log('Entire directory has been walked.');
+    filesRead = true;
+    if ( objectsRead ) {
+        compare(objects, files);
+    }
+});
+
+// ----------------------------------------------------------------------------
+
+// set up some queues to start doing things once we know what to do
+var checkMd5Queue = async.queue(checkMd5, 5);
+var mkdirQueue    = async.queue(mkdir,    1);
+var downloadQueue = async.queue(download, 5);
+var uploadQueue   = async.queue(upload,   5);
+
+// once we know all the objects and all the local files, we can now start comparing!
+function compare(objects, files) {
+    var fileNames = Object.keys(files).sort();
+    var objectNames = Object.keys(objects).sort();
+
+    // firstly, see if there are any local files which don't exist in S3
+    fileNames.forEach(function(filename) {
+        if ( !( filename in objects ) ) {
+            uploadQueue.push(files[filename]);
+        }
+    });
+
+    // now see if there are any S3 objects which are not local
+    objectNames.forEach(function(objectName) {
+        if ( !( objectName in files ) ) {
+            mkdirQueue.push(objects[objectName]);
+        }
+    });
+
+    // check all the files/objects that are in both places
+    fileNames.forEach(function(filename) {
+        if ( filename in objects ) {
+            if ( files[filename].size === objects[filename].size ) {
+                checkMd5Queue.push(files[filename]);
+            }
+            else {
+                console.log('✗ ' + filename + ' (different sizes)');
+            }
+        }
+    });
+}
+
+function checkMd5(item, done) {
+    var stream = fs.createReadStream(fullDir + '/' + item.filename);
+    var hash = crypto.createHash('md5');
+
+    stream.on('end', function() {
+        var md5 = hash.digest('hex');
+        if ( md5 === objects[item.filename].md5 ) {
+            console.log('✓ ' + item.filename);
+        }
+        else {
+            console.log('✗ ' + item.filename + ' (different MD5s)');
+        }
+        done();
+    });
+
+    // pipe the file to the hash
+    stream.pipe(hash, { end : false });
+}
+
+// Cache the results of the fs.stat() or mkdirp() so we don't keep doing it.
+// If dirCache[newDir] exists, it'll be true (dir exists), or false (an error).
+var dirCache = {};
+function mkdir(item, done) {
+    var newDir = item.key.substr(0, item.key.lastIndexOf('/'));
+    if ( newDir === '' ) {
+        downloadQueue.push(item);
+        return done();
+    }
+
+    // if we have already cached this result
+    if ( newDir in dirCache ) {
+        if ( dirCache[newDir] ) {
+            downloadQueue.push(item);
+        }
+        return done();
+    }
+
+    // check to see if this dirname already exists
+    var dirname = fullDir + '/' + newDir;
+    fs.stat(dirname, function(err, stats) {
+        if (err) {
+            // no file or directory exists with this name
+            mkdirp(dirname, function (err) {
+                if (err) {
+                    console.log('✗ ' + dirname + " (couldn't create directory)");
+                    return done(err);
+                }
+                console.log('+ ' + newDir + '/ (created)');
+                downloadQueue.push(item);
+                dirCache[newDir] = true;
+                done();
+            });
+            return;
+        }
+
+        if ( !stats.isDirectory() ) {
+            console.log('✗ ' + dirname + " (is not a directory)");
+            dirCache[newDir] = false;
+            return done();
+        }
+
+        // all ok
+        downloadQueue.push(item);
+        dirCache[newDir] = true;
+        done();
+    });
+}
+
+function download(item, done) {
+    var file = fs.createWriteStream(fullDir + '/' + item.key);
+    var stream = s3.getObject({ Bucket : bucket, Key : item.key }).createReadStream();
+    stream.pipe(file);
+
+    stream.on('error', function(err) {
+        console.log('✗ ' + item.key + ' (download err: ' + err + ')');
+        done();
+    });
+    stream.on('end', function() {
+        console.log('↓ ' + item.key);
+        done();
+    });
+}
+
+function upload(item, done) {
+    var stream = fs.createReadStream(fullDir + '/' + item.filename);
+    var params = {
+        Bucket: bucket,
+        Key: item.filename,
+        Body: stream,
+    };
+    s3.putObject(params, function(err) {
+        if (err) {
+            console.log('✗ ' + item.key + ' (upload err' + err.message + ')');
+            return done();
+        }
+        console.log('↑ ' + item.filename);
+        done();
+    });
+}
+
+// ----------------------------------------------------------------------------

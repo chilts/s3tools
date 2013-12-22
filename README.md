@@ -104,6 +104,37 @@ f18a0da9e043cc4f8579acb7cc838357
 
 As you can see the two `my-file-{1,2}.txt` are the same file and the two holiday images are also the same.
 
+### s3-sync ###
+
+Syncs a folder and a bucket. This program NEVER deletes your local files or your objects. It preserves everything
+and in the case where it doesn't know what to do, it'll tell you to resolve your conflict. The procedure is:
+
+* if a local file exists and an object does not exist, the file is uploaded
+* if an object exists but a file does not, the object is downloaded
+* if the file and object differ in size, a conflict error is shown (for you to resolve)
+* if the file (MD5) and object (ETag) differ, a conflict is shown (for you to resolve)
+* if they both exist with the same length and MD5, the file is shown as correct
+
+It's very simple, but designed to be this way.
+
+```
+Usage: s3-sync <bucket> <dir>
+```
+
+If key is not specified, then the key defaults to the filename.
+
+Options:
+
+* none
+
+Examples:
+
+```
+$ s3-sync my-bucket my-dir/
+$ s3-sync files files
+$ s3-sync s3.example.com public
+```
+
 ## Author ##
 
 Written by [Andrew Chilton](http://chilts.org/) - [Blog](http://chilts.org/blog/) -
