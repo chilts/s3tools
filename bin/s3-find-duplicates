@@ -14,6 +14,7 @@ var nice = require('../lib/nice-s3.js');
 aws.config.update({
     accessKeyId     : process.env.AWS_ACCESS_KEY_ID,
     secretAccessKey : process.env.AWS_SECRET_ACCESS_KEY,
+    sslEnabled      : true,
 });
 
 var bucket = process.argv[2];
