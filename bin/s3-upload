@@ -39,13 +39,12 @@ if ( !key ) {
     process.exit(2);
 }
 
-var s3 = new aws.S3({ params : { Bucket : bucket }});
+var s3 = new aws.S3();
 
-console.log('Uploading ' + filename);
-console.log( ' -> ' + bucket + '/' + key);
 var params = {
-    Key  : key,
-    Body : fs.createReadStream(filename),
+    Bucket : bucket,
+    Key    : key,
+    Body   : fs.createReadStream(filename),
 };
 
 if ( args.acl ) {
@@ -53,11 +52,16 @@ if ( args.acl ) {
 }
 
 s3.putObject(params, function(err, info) {
-    if (err) throw err;
-    console.log('info:', info);
-    console.log('RequestId: ' + info.RequestId);
-    console.log('ETag: ' + info.ETag.substr(1, 32));
-    console.log("Object is public at https://s3.amazonaws.com/" + bucket + "/" + params.Key);
+    if (err) {
+        console.error('Error uploading file : ' + err);
+        process.exit(2);
+    }
+    if ( filename === key ) {
+        console.log('↑ ' + filename);
+    }
+    else {
+        console.log('↑ ' + filename + ' → ' + key);
+    }
 });
 
 // ----------------------------------------------------------------------------
