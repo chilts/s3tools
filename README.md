@@ -78,9 +78,14 @@ Options:
 Examples:
 
 ```
-$ s3-upload my-bucket my-file.txt file.txt
 $ s3-upload my-bucket filename-and-key.txt
+↑ filename-and-key.txt
+
+$ s3-upload my-bucket my-file.txt file.txt
+↑ my-file.txt → file.txt
+
 $ s3-upload f.example.com --acl public-read path/to/animation.avi videos/animation.avi
+↑ path/to/animation.avi → videos/animation.avi
 ```
 
 ### s3-find-duplicates ###
@@ -149,6 +154,29 @@ downloaded, a file being uploaded and a file which is the same in both places:
 
 There are various other errors (such as inability to create a subdirectory) and each is preceded with `✗` and followed
 by the error message.
+
+### s3-delete ###
+
+Deletes the filename locally and the object from the bucket specified.
+
+```
+Usage: s3-delete bucket <filename/key>
+```
+
+This operation will look for a local file and delete it. It will also delete the key in the bucket specified. Both of
+these operations will suceed even if the file and/or key doesn't actually exist.
+
+Example:
+
+```
+$ s3-delete my-bucket my-file.txt
+! my-file.txt (file)
+! my-file.txt (object)
+
+$ s3-delete images holiday-2013.jpg
+! holiday-2013.jpg (file)
+! holiday-2013.jpg (object)
+```
 
 ## Author ##
 

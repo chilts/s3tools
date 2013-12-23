@@ -6,6 +6,7 @@
     "s3-list-buckets": "./bin/s3-list-buckets",
     "s3-list-objects": "./bin/s3-list-objects",
     "s3-upload": "./bin/s3-upload"
+    "s3-delete": "./bin/s3-delete"
   },
   "homepage": "https://github.com/chilts/s3tools",
   "repository": {
