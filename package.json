@@ -5,7 +5,9 @@
   "bin": {
     "s3-list-buckets": "./bin/s3-list-buckets",
     "s3-list-objects": "./bin/s3-list-objects",
-    "s3-upload": "./bin/s3-upload"
+    "s3-find-duplicates": "./bin/s3-find-duplicates",
+    "s3-sync": "./bin/s3-sync",
+    "s3-upload": "./bin/s3-upload",
     "s3-delete": "./bin/s3-delete"
   },
   "homepage": "https://github.com/chilts/s3tools",
