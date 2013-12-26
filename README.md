@@ -88,6 +88,33 @@ $ s3-upload f.example.com --acl public-read path/to/animation.avi videos/animati
 ↑ path/to/animation.avi → videos/animation.avi
 ```
 
+### s3-download ###
+
+Downloads one file at a time and saves it to the file system:
+
+```
+Usage: s3-download <bucket> <key> [<filename>]
+```
+
+If filename is not specified, then it defaults to the key
+
+Options:
+
+* [none]
+
+Examples:
+
+```
+$ s3-download my-bucket filename-and-key.txt
+↓ filename-and-key.txt
+
+$ s3-download my-bucket my-file.txt file.txt
+↑ my-file.txt → file.txt
+
+$ s3-download my-bucket non/existant/file.txt
+✗ non/existant/file.txt (download err: Error: The specified key does not exist.)
+```
+
 ### s3-find-duplicates ###
 
 Finds all duplicate objects in the bucket based on the ETag/MD5.
