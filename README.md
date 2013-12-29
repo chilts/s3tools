@@ -164,14 +164,15 @@ and in the case where it doesn't know what to do, it'll tell you to resolve your
 It's very simple, but designed to be this way.
 
 ```
-Usage: s3-sync <bucket> <dir>
+Usage: s3-sync --bucket <bucket> --dir <dir>
 ```
 
-If key is not specified, then the key defaults to the filename.
+You must provide both a bucket and a directory to compare.
 
 Options:
 
-* none
+* --up   - only upload files
+* --down - only download files
 
 Examples:
 
@@ -181,20 +182,22 @@ $ s3-sync files files
 $ s3-sync s3.example.com public
 ```
 
-Example output. You can see a subdir/ being created, a cnflict on filesize, a conflict on MD5, an object being
+Example output. You can see a subdir/ being created, a conflict on filesize, a conflict on MD5, an object being
 downloaded, a file being uploaded and a file which is the same in both places:
 
 ```
 + subdir/ (created)
 ✗ different-size.txt (different sizes)
 ✗ different-md5.txt (different MD5s)
-↓ new-object.txt
-↑ new-file.js
+↓ new-object.txt ...
+↑ new-file.js ...
+↓ new-object.txt ... done
+↑ new-file.js ... done
 ✓ file-ok.txt
 ```
 
 There are various other errors (such as inability to create a subdirectory) and each is preceded with `✗` and followed
-by the error message.
+by the error message. If a file is ignored for either upload or download, it is postfixed with '(ignored)'.
 
 ### s3-delete ###
 

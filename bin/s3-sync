@@ -10,6 +10,7 @@ var aws = require('aws-sdk');
 var async = require('async');
 var mkdirp = require('mkdirp');
 var walk = require('walkdir');
+var argh = require('argh');
 
 // local
 var nice = require('../lib/nice-s3.js');
@@ -23,13 +24,13 @@ aws.config.update({
     sslEnabled      : true,
 });
 
-var bucket = process.argv[2];
+var bucket = argh.argv.bucket;
 if (!bucket) {
     console.log('Usage: %s %s <bucket> <dir>', process.argv[0], process.argv[1]);
     process.exit(2);
 }
 
-var dir = process.argv[3];
+var dir = argh.argv.dir;
 if (!dir) {
     console.log('Usage: %s %s <bucket> <dir>', process.argv[0], process.argv[1]);
     process.exit(2);
@@ -41,6 +42,21 @@ var files = {}, filesRead;
 
 // get a client to S3 and start the listing off
 var s3 = new aws.S3();
+
+var doUpload = true;
+var doDownload = true;
+if ( argh.argv.up ) {
+    if ( argh.argv.down ) {
+        console.warn('You can specify either --up or --down, but not both.');
+        process.exit(2);
+    }
+    doUpload = true;
+    doDownload = false;
+}
+if ( argh.argv.down ) {
+    doUpload = false;
+    doDownload = true;
+}
 
 nice.objects(s3, bucket, function(err, objs) {
     if (err) {
@@ -110,14 +126,26 @@ function compare(objects, files) {
     // firstly, see if there are any local files which don't exist in S3
     fileNames.forEach(function(filename) {
         if ( !( filename in objects ) ) {
-            uploadQueue.push(files[filename]);
+            // only push onto the queue if we want uploads
+            if ( doUpload ) {
+                uploadQueue.push(files[filename]);
+            }
+            else {
+                console.log('↑ ' + filename + ' (ignored)');
+            }
         }
     });
 
     // now see if there are any S3 objects which are not local
     objectNames.forEach(function(objectName) {
         if ( !( objectName in files ) ) {
-            mkdirQueue.push(objects[objectName]);
+            // only push onto the queue if we want downloads
+            if ( doDownload ) {
+                mkdirQueue.push(objects[objectName]);
+            }
+            else {
+                console.log('↓ ' + objectName + ' (ignored)');
+            }
         }
     });
 
@@ -206,13 +234,14 @@ function download(item, done) {
     var file = fs.createWriteStream(fullDir + '/' + item.key);
     var stream = s3.getObject({ Bucket : bucket, Key : item.key }).createReadStream();
     stream.pipe(file);
+    console.log('↓ ' + item.key + ' ... ');
 
     stream.on('error', function(err) {
         console.log('✗ ' + item.key + ' (download err: ' + err + ')');
         done();
     });
     stream.on('end', function() {
-        console.log('↓ ' + item.key);
+        console.log('↓ ' + item.key + ' ... done');
         done();
     });
 }
@@ -224,12 +253,13 @@ function upload(item, done) {
         Key: item.filename,
         Body: stream,
     };
+    console.log('↑ ' + item.filename + ' ... ');
     s3.putObject(params, function(err) {
         if (err) {
             console.log('✗ ' + item.key + ' (upload err' + err.message + ')');
             return done();
         }
-        console.log('↑ ' + item.filename);
+        console.log('↑ ' + item.filename + ' ... done');
         done();
     });
 }
