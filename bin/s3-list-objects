@@ -26,14 +26,9 @@ if (!bucket) {
 // get a client to S3 and start the listing off
 var s3 = new aws.S3();
 
-nice.objects(s3, bucket, function(err, objects) {
-    if (err) {
-        console.warn(err.code + ' - ' + err.message);
-        process.exit(2);
-    }
-    objects.forEach(function(obj) {
-        console.log(obj.ETag.substr(1, 32) + ' ' + obj.Key + ' (' + obj.Size + ')');
-    });
+var stream = nice.objectStream(s3, bucket);
+stream.on('data', function(obj) {
+    console.log(obj.ETag.substr(1, 32) + ' ' + obj.Key + ' (' + obj.Size + ')');
 });
 
 // ----------------------------------------------------------------------------
