@@ -61,6 +61,20 @@ NoSuchBucket The specified bucket does not exist
 
 If the bucket does not exist, the command returns a non-zero exit code.
 
+### s3-bucket-summary ###
+
+```
+Usage: s3-bucket-summary --bucket <bucket>
+```
+
+Examples:
+
+```
+$ s3-bucket-summary --bucket my-bucket
+Total Objects = 10195
+Size (bytes)  = 37136856094
+```
+
 ### s3-upload ###
 
 Uploads one file at a time and puts it into a bucket with the given prefix:

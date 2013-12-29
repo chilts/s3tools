@@ -1,0 +1,41 @@
+#!/usr/bin/env node
+// ----------------------------------------------------- -*- javascript -*- ---
+
+// npm
+var aws = require('aws-sdk');
+var argh = require('argh');
+
+// local
+var nice = require('../lib/nice-s3.js');
+
+// ----------------------------------------------------------------------------
+
+// set up the AWS config and credentials
+aws.config.update({
+    accessKeyId     : process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey : process.env.AWS_SECRET_ACCESS_KEY,
+    sslEnabled      : true,
+});
+
+var bucket = argh.argv.bucket;
+if (!bucket) {
+    console.log('Usage: %s %s --bucket <bucket>', process.argv[0], process.argv[1]);
+    process.exit(2);
+}
+
+// get a client to S3 and start the listing off
+var s3 = new aws.S3();
+
+var stream = nice.objectStream(s3, bucket);
+var total = 0;
+var size = 0;
+stream.on('data', function(obj) {
+    total++;
+    size += obj.Size;
+});
+stream.on('end', function() {
+    console.log('Total Objects = ' + total);
+    console.log('Size (bytes)  = ' + size);
+});
+
+// ----------------------------------------------------------------------------
