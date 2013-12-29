@@ -193,20 +193,20 @@ by the error message. If a file is ignored for either upload or download, it is 
 Deletes the filename locally and the object from the bucket specified.
 
 ```
-Usage: s3-delete bucket <filename/key>
+Usage: s3-delete --bucket bucket --dir path/to/dir <filename/key>
 ```
 
 This operation will look for a local file and delete it. It will also delete the key in the bucket specified. Both of
-these operations will suceed even if the file and/or key doesn't actually exist.
+these operations will succeed even if the file and/or key doesn't actually exist.
 
 Example:
 
 ```
-$ s3-delete my-bucket my-file.txt
+$ s3-delete --bucket my-bucket --dir path/to/my-bucket my-file.txt
 ! my-file.txt (file)
 ! my-file.txt (object)
 
-$ s3-delete images holiday-2013.jpg
+$ s3-delete --bucket images --dir path/to/my-bucket holiday-2013.jpg
 ! holiday-2013.jpg (file)
 ! holiday-2013.jpg (object)
 ```

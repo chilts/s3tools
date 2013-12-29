@@ -20,16 +20,18 @@ aws.config.update({
 
 var args     = argh.argv;
 var acl      = args.acl;
-var bucket   = args.argv[0];
-var filename = args.argv[1];
+var bucket   = args.bucket;
+var dir      = args.dir;
+var fullDir  = fs.realpathSync(dir);
+var filename = args.argv[0];
 
 if ( !bucket ) {
-    console.log('Usage: %s %s <bucket> <filename>', process.argv[0], process.argv[1]);
+    console.log('Usage: %s %s --bucket <bucket> <filename>', process.argv[0], process.argv[1]);
     process.exit(2);
 }
 
 if ( !filename ) {
-    console.log('Usage: %s %s <bucket> <filename>', process.argv[0], process.argv[1]);
+    console.log('Usage: %s %s --bucket <bucket> <filename>', process.argv[0], process.argv[1]);
     process.exit(2);
 }
 
@@ -41,7 +43,7 @@ var params = {
 };
 
 // do two operations (simultaneously)
-fs.unlink(filename, function(err) {
+fs.unlink(fullDir + '/' + filename, function(err) {
     if (err) {
         if ( err.code === 'ENOENT' ) {
             return console.log('! ' + filename + ' (file)');
