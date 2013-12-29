@@ -4,6 +4,7 @@
 // npm
 var aws = require('aws-sdk');
 var async = require('async');
+var argh = require('argh');
 
 // local
 var nice = require('../lib/nice-s3.js');
@@ -17,9 +18,9 @@ aws.config.update({
     sslEnabled      : true,
 });
 
-var bucket = process.argv[2];
+var bucket = argh.argv.bucket;
 if (!bucket) {
-    console.log('Usage: %s %s <bucket>', process.argv[0], process.argv[1]);
+    console.log('Usage: %s %s --bucket <bucket>', process.argv[0], process.argv[1]);
     process.exit(2);
 }
 

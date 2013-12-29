@@ -32,22 +32,11 @@ Options:
 
 ### s3-list-objects ###
 
-```
-Usage: s3-list-objects <bucket>
-```
-
-Prints each object out as follows:
+Prints each object's ETag (MD5), name and size in the bucket.
 
 ```
-ETag Key (Size)
-
-e.g.
-1b3ca34cd0f42fa00d57d30d7307f214 recipes/crunchy-lemon-muffins.jpg (5208787)
+Usage: s3-list-objects --bucket <bucket>
 ```
-
-Options:
-
-* none
 
 Examples:
 
