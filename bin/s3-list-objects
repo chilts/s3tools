@@ -8,6 +8,7 @@ var argh = require('argh');
 
 // local
 var nice = require('../lib/nice-s3.js');
+var walk = require('walkdir-hash');
 
 // ----------------------------------------------------------------------------
 
@@ -18,18 +19,44 @@ aws.config.update({
     sslEnabled      : true,
 });
 
-var bucket = argh.argv.bucket;
-if (!bucket) {
-    console.log('Usage: %s %s --bucket <bucket>', process.argv[0], process.argv[1]);
+function usage() {
+    console.log('Usage: %s %s [--bucket <bucket]', process.argv[0], process.argv[1]);
+    console.log('Usage: %s %s [--dir <dir>]', process.argv[0], process.argv[1]);
     process.exit(2);
 }
 
-// get a client to S3 and start the listing off
-var s3 = new aws.S3();
+if ( argh.argv.bucket && argh.argv.dir ) {
+    usage();
+}
+if ( typeof argh.argv.bucket === 'boolean' || typeof argh.argv.dir === 'boolean' ) {
+    usage();
+}
 
-var stream = nice.objectStream(s3, bucket);
-stream.on('data', function(obj) {
-    console.log(obj.ETag.substr(1, 32) + ' ' + obj.Key + ' (' + obj.Size + ')');
-});
+if ( argh.argv.bucket ) {
+    doBucket(argh.argv.bucket);
+}
+else if ( argh.argv.dir ) {
+    doDir(argh.argv.dir);
+}
+else {
+    usage();
+}
+
+function doBucket(bucket) {
+    // get a client to S3 and start the listing off
+    var s3 = new aws.S3();
+
+    var stream = nice.objectStream(s3, bucket);
+    stream.on('data', function(obj) {
+        console.log(obj.ETag.substr(1, 32) + ' ' + obj.Key + ' (' + obj.Size + ')');
+    });
+}
+
+function doDir(dir) {
+    var stream = walk(dir, 'md5');
+    stream.on('data', function(file) {
+        console.log(file.hash + ' ' + file.filename + ' (' + file.stat.size + ')');
+    });
+}
 
 // ----------------------------------------------------------------------------

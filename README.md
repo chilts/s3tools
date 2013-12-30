@@ -36,6 +36,7 @@ Prints each object's ETag (MD5), name and size in the bucket.
 
 ```
 Usage: s3-list-objects --bucket <bucket>
+Usage: s3-list-objects --dir <dir>
 ```
 
 Examples:
