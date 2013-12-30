@@ -121,13 +121,14 @@ $ s3-download my-bucket non/existant/file.txt
 
 ### s3-find-duplicates ###
 
-Finds all duplicate objects in the bucket based on the ETag/MD5.
+Finds all duplicate objects in the bucket or directory based on the ETag/MD5.
 
 ```
-Usage: s3-find-duplicates <bucket>
+Usage: s3-find-duplicates --bucket <bucket>
+Usage: s3-find-duplicates --dir <dir>
 ```
 
-Prints each ETag first, then the names of any duplicate objects:
+Prints each ETag/MD5 first, then the names of any duplicate objects:
 
 ```
 dc603ae9ef991f230c00671fde9958a8
@@ -139,6 +140,8 @@ f18a0da9e043cc4f8579acb7cc838357
 ```
 
 As you can see the two `my-file-{1,2}.txt` are the same file and the two holiday images are also the same.
+
+Once you know where your duplicates are, in either your bucket or directory, then you can start deleting them.
 
 ### s3-sync ###
 

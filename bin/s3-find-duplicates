@@ -4,64 +4,103 @@
 // npm
 var aws = require('aws-sdk');
 var async = require('async');
+var argh = require('argh');
+var walk = require('walkdir-hash');
 
 // local
 var nice = require('../lib/nice-s3.js');
 
 // ----------------------------------------------------------------------------
 
-// set up the AWS config and credentials
-aws.config.update({
-    accessKeyId     : process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey : process.env.AWS_SECRET_ACCESS_KEY,
-    sslEnabled      : true,
-});
-
-var bucket = process.argv[2];
-if (!bucket) {
-    console.log('Usage: %s %s <bucket>', process.argv[0], process.argv[1]);
+function usage() {
+    console.log('Usage: %s %s [--bucket <bucket]', process.argv[0], process.argv[1]);
+    console.log('Usage: %s %s [--dir <dir>]', process.argv[0], process.argv[1]);
     process.exit(2);
 }
 
-// get a client to S3 and start the listing off
-var s3 = new aws.S3();
+if ( argh.argv.bucket && argh.argv.dir ) {
+    usage();
+}
+if ( typeof argh.argv.bucket === 'boolean' || typeof argh.argv.dir === 'boolean' ) {
+    usage();
+}
 
-nice.objects(s3, bucket, function(err, objects) {
-    if (err) {
-        console.warn(err.code + ' - ' + err.message);
-        process.exit(2);
-    }
+if ( argh.argv.bucket ) {
+    doBucket(argh.argv.bucket);
+}
+else if ( argh.argv.dir ) {
+    doDir(argh.argv.dir);
+}
+else {
+    usage();
+}
 
+// ----------------------------------------------------------------------------
 
-    // go through all the objects
+function doBucket(bucket) {
+    // set up the AWS config and credentials
+    aws.config.update({
+        accessKeyId     : process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey : process.env.AWS_SECRET_ACCESS_KEY,
+        sslEnabled      : true,
+    });
+
+    // save all MD5s
     var md5 = {};
-    objects.forEach(function(obj) {
+
+    // get a client to S3 and start the listing off
+    var s3 = new aws.S3();
+    var stream = nice.objectStream(s3, bucket);
+    stream.on('data', function(obj) {
         var etag = obj.ETag.substr(1, 32);
         if ( md5[etag] ) {
             // subsequent ones
-            md5[etag].push(obj);
+            md5[etag].push(obj.Key);
         }
         else {
             // first one
-            md5[etag] = [ obj ];
+            md5[etag] = [ obj.Key ];
         }
     });
+    stream.on('end', function() {
+        printDuplicates(md5);
+    });
+}
 
+function doDir(dir) {
+    var md5 = {};
+    var stream = walk(dir, 'md5');
+    stream.on('data', function(file) {
+        if ( md5[file.hash] ) {
+            // subsequent ones
+            md5[file.hash].push(file.filename);
+        }
+        else {
+            // first one
+            md5[file.hash] = [ file.filename ];
+        }
+    });
+    stream.on('end', function() {
+        printDuplicates(md5);
+    });
+}
+
+function printDuplicates(md5) {
     // find all the duplicates
     var dup = {};
-    Object.keys(md5).forEach(function(etag) {
-        if ( md5[etag].length > 1 ) {
-            dup[etag] = md5[etag];
+    Object.keys(md5).forEach(function(hash) {
+        if ( md5[hash].length > 1 ) {
+            dup[hash] = md5[hash];
         }
     });
 
     // now print them out nicely
-    Object.keys(dup).sort().forEach(function(etag) {
-        console.log(etag);
-        dup[etag].forEach(function(obj) {
-            console.log('  ' + obj.Key);
+    Object.keys(dup).sort().forEach(function(hash) {
+        console.log(hash);
+        dup[hash].forEach(function(name) {
+            console.log('  ' + name);
         });
     });
-});
+}
 
 // ----------------------------------------------------------------------------
