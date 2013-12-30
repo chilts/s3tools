@@ -5,10 +5,10 @@
 var aws = require('aws-sdk');
 var async = require('async');
 var argh = require('argh');
+var walk = require('walkdir-hash');
 
 // local
 var nice = require('../lib/nice-s3.js');
-var walk = require('walkdir-hash');
 
 // ----------------------------------------------------------------------------
 
