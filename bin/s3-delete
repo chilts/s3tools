@@ -48,14 +48,14 @@ fs.unlink(fullDir + '/' + filename, function(err) {
         if ( err.code === 'ENOENT' ) {
             return console.log('! ' + filename + ' (file)');
         }
-        return console.warn('Error deleting file: ' + err);
+        return console.warn('✗ Error deleting file: ' + err);
     }
     console.log('! ' + filename + ' (file)');
 });
 
 s3.deleteObject(params, function(err, info) {
     if (err) {
-        return console.warn('Error deleting object: ' + err);
+        return console.warn('✗ Error deleting object: ' + err);
     }
     console.log('! ' + filename + ' (object)');
 });
