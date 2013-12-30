@@ -26,13 +26,13 @@ aws.config.update({
 
 var bucket = argh.argv.bucket;
 if (!bucket) {
-    console.log('Usage: %s %s <bucket> <dir>', process.argv[0], process.argv[1]);
+    console.log('Usage: %s %s --bucket <bucket> --dir <dir> [--up] [--down]', process.argv[0], process.argv[1]);
     process.exit(2);
 }
 
 var dir = argh.argv.dir;
 if (!dir) {
-    console.log('Usage: %s %s <bucket> <dir>', process.argv[0], process.argv[1]);
+    console.log('Usage: %s %s --bucket <bucket> --dir <dir> [--up] [--down]', process.argv[0], process.argv[1]);
     process.exit(2);
 }
 var fullDir = fs.realpathSync(dir);
